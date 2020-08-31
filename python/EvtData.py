@@ -36,20 +36,32 @@ class EvtData:
             for name,handle in vars(self.handles).iteritems():            
                 handle.get(event)
                 self.got_handles.append(name)
- 
+
+    def get_handle(self,name):
+        """ 
+        gets the product handle with name "name"
+        now checks to ensure the handles are got first and not gets them
+        """ 
+        
+        handle = getattr(self.handles,name)
+        if not name in self.got_handles:
+            handle.get(self.event)
+            self.got_handles.append(name)
+
+        return handle
+            
     def get(self,name):
         """ 
         gets the product with name "name"
         now checks to ensure the handles are got first and not gets them
         """ 
-                
-        if not name in self.got_handles:
-            getattr(self.handles,name).get(self.event)
-            self.got_handles.append(name)
+        handle = self.get_handle(name)
+        
         try:
-            return getattr(self.handles,name).product()
+            return handle.product()
         except RuntimeError:
             return None
+
            
 class EvtWeights:
     def __init__(self,input_filename,lumi=0.075):
