@@ -7,6 +7,8 @@ from enum import Enum
 import json
 import re
 
+import EgammaUser.EgammaDAS2020.MathTools as MathTools
+
 class PartStatus(Enum):
     INITIAL = 1
     PREFSR = 2
@@ -17,8 +19,8 @@ def genpart_to_str(genpart,index=None):
     mo1,mo2 = -1,-1
     nrMos = genpart.numberOfMothers()
     if nrMos >0:
-        mo1 = genpart.motherRef(0).index()
-        mo2 = genpart.motherRef(nrMos-1).index()
+        mo1 = -1#genpart.motherRef(0).index() disabled due to miniAOD
+        mo2 = -1#genpart.motherRef(nrMos-1).index() disabled due to miniAOD
     da1,da2 = -1,-1
     nrDas = genpart.numberOfDaughters()
     if nrDas >0:
@@ -46,14 +48,14 @@ def genparts_to_str(genparts,max_to_print=20):
                   
 
 def get_lastcopy_prefsr(part):
-    daughters = part.daughterRefVector()
-    if daughters.size()==1 and daughters[0].pdgId()==part.pdgId():
-        return get_lastcopy_prefsr(daughters[0])
+    if part.numberOfDaughters==1 and part.daughters(0).pdgId()==part.pdgId():
+        return get_lastcopy_prefsr(part.daughters(0))
     else:
         return part
-    
+
 def get_lastcopy(part):
-    for daughter in part.daughterRefVector():
+    for indx in range(0,part.numberOfDaughters):
+        daughter = part.daughter(indx)
         if daughter.pdgId() == part.pdgId():
             return get_lastcopy(daughter)
     return part
@@ -62,6 +64,10 @@ def get_genparts(genparts,pid=11,antipart=True,status=PartStatus.PREFSR):
     """
     returns a list of the gen particles matching the given criteria from hard process
     might not work for all generators as depends on isHardProcess()
+
+    note the status (PREFSR, INITIAL, FINAL) probably requires AOD not MINIOAD to work
+    it is possible that MINIAOD prunes the other copies and thus there is only one copy of the electron
+    to be checked
     """
 
     selected = []
@@ -69,7 +75,8 @@ def get_genparts(genparts,pid=11,antipart=True,status=PartStatus.PREFSR):
     for part in genparts:
         pdg_id = part.pdgId()
         if pdg_id == pid or (antipart and abs(pdg_id) == abs(pid)):
-            if part.isHardProcess():
+
+            if part.statusFlags().isHardProcess() or part.statusFlags().fromHardProcess():
                 if status == PartStatus.INITIAL:
                     selected.append(part)
                 elif status == PartStatus.PREFSR:
@@ -95,7 +102,7 @@ def match_to_gen(eta,phi,genparts,pid=11,antipart=True,max_dr=0.1,status=PartSta
     best_dr2 = max_dr*max_dr
     selected_parts = get_genparts(genparts,pid,antipart,status)
     for part in selected_parts:
-        dr2 = ROOT.reco.deltaR2(eta,phi,part.eta(),part.phi())
+        dr2 = MathTools.cal_delta_r2(eta,phi,part.eta(),part.phi())
         if dr2 < best_dr2:
             best_match = part
             best_dr2 = dr2

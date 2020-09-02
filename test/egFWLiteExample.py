@@ -11,11 +11,10 @@ import re
 import os
 
 from DataFormats.FWLite import Events, Handle
-from Analysis.HLTAnalyserPy.EvtData import EvtData, EvtHandles, add_product
-
-import Analysis.HLTAnalyserPy.CoreTools as CoreTools
-import Analysis.HLTAnalyserPy.GenTools as GenTools
-import Analysis.HLTAnalyserPy.HistTools as HistTools
+from EgammaUser.EgammaDAS2020.EvtData import EvtData, EvtHandles, add_product
+import EgammaUser.EgammaDAS2020.CoreTools as CoreTools
+import EgammaUser.EgammaDAS2020.GenTools as GenTools
+import EgammaUser.EgammaDAS2020.MathTools as MathTools
 
 """ 
 This is an example of how to access E/gamma objects in the MiniAOD in fwlite. 
@@ -39,6 +38,7 @@ if __name__ == "__main__":
     parser.add_argument('in_filenames',nargs="+",help='input filenames')
     parser.add_argument('--prefix','-p',default='',help='file prefix')
     parser.add_argument('--out','-o',default="output.root",help='output filename')
+    parser.add_argument('--report','-r',default=5000,type=int,help='report every x events')
     args = parser.parse_args()
     
     in_filenames_with_prefix = ['{}{}'.format(args.prefix,x) for x in args.in_filenames]
@@ -48,17 +48,21 @@ if __name__ == "__main__":
     products = [] 
     add_product(products,"eles","std::vector<pat::Electron>","slimmedElectrons")
     add_product(products,"phos","std::vector<pat::Photon>","slimmedPhotons")
+    add_product(products,"gen","std::vector<pat::PackedGenParticle>","packedGenParticles")
     evtdata = EvtData(products,verbose=True)
 
     #now open the output root file
     out_file = ROOT.TFile(args.out,"RECREATE")
     #create a histogram
-    ROOT.sigmaIEtaIEtaHist = ROOT.TH1D("sigmaIEtaIEtaHist",";#sigma_{i#etai#eta};#entries;",100,0,0.03)
+    #we will do this for signal and bkg seperately
+    #for data we will just fill the signal    
+    sigmaIEtaIEtaSigHist = ROOT.TH1D("sigmaIEtaIEtaSigHist",";#sigma_{i#etai#eta};#entries;",90,0,0.03)
+    sigmaIEtaIEtaBkgHist = ROOT.TH1D("sigmaIEtaIEtaBkgHist",";#sigma_{i#etai#eta};#entries;",90,0,0.03)
     
     events = Events(in_filenames_with_prefix)
     nr_events = events.size()
     for event_nr,event in enumerate(events):
-        if event_nr%500==0:
+        if event_nr%args.report==0:
             print("processing event {} / {}".format(event_nr,nr_events))
         evtdata.get_handles(event)
         for ele in evtdata.get("eles"):
@@ -67,7 +71,13 @@ if __name__ == "__main__":
             #electron eta is used for physics quantities as it is w.r.t to the vtx position of the electron and just represents its true eta
             #summary: SC eta = detector eta, electron eta = physics eta
             if ele.et()>25 and abs(ele.superCluster().eta())<1.4442:
-                ROOT.sigmaIEtaIEtaHist.Fill(ele.full5x5_sigmaIetaIeta())
+                is_data = event.object().event().isRealData()
+                #first fill for data & gen matched MC
+                if is_data or GenTools.match_to_gen(ele.eta(),ele.phi(),evtdata.get("gen"))[0]:
+                    sigmaIEtaIEtaSigHist.Fill(ele.full5x5_sigmaIetaIeta())
+                #now fill for MC which has not been gen matched 
+                elif not is_data: 
+                    sigmaIEtaIEtaBkgHist.Fill(ele.full5x5_sigmaIetaIeta())
                 
     out_file.Write()
     

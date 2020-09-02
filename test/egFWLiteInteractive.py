@@ -12,8 +12,8 @@ import os
 
 from DataFormats.FWLite import Events, Handle
 from EgammaUser.EgammaDAS2020.EvtData import EvtData, EvtHandles, add_product
-
 import EgammaUser.EgammaDAS2020.CoreTools as CoreTools
+import EgammaUser.EgammaDAS2020.CoreTools as MathTools
 import EgammaUser.EgammaDAS2020.GenTools as GenTools
 
 """ 
@@ -33,7 +33,17 @@ def get_eles(evtdata,events,indx):
     print("event: {} {} {}".format(events.eventAuxiliary().run(),events.eventAuxiliary().luminosityBlock(),events.eventAuxiliary().event()))
     print("# eles = {}".format(eles.size()))
     return eles
-    
+
+def get_objs(evtdata,events,objname,indx):
+    """
+    A small helper function to save typing out this commands each time
+    """
+    events.to(indx)
+    evtdata.get_handles(events)
+    objs = evtdata.get(objname)
+    print("event: {} {} {}".format(events.eventAuxiliary().run(),events.eventAuxiliary().luminosityBlock(),events.eventAuxiliary().event()))
+    print("# {} = {}".format(objname,objs.size()))
+    return objs
 
 if __name__ == "__main__":
 
@@ -56,6 +66,7 @@ if __name__ == "__main__":
     add_product(products,"eles","std::vector<pat::Electron>","slimmedElectrons")
     add_product(products,"phos","std::vector<pat::Photon>","slimmedPhotons")
     add_product(products,"trigRes","edm::TriggerResults","TriggerResults::HLT")
+    add_product(products,"gen","std::vector<pat::PackedGenParticle>","packedGenParticles")
     evtdata = EvtData(products,verbose=True)
 
     events = Events(args.in_filenames)
