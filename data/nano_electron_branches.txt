@@ -1,0 +1,4 @@
+#to save time we drop branches from the nano we dont need
+drop *
+keep Electron*
+keep nElectron
