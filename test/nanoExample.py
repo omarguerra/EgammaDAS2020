@@ -117,7 +117,7 @@ if __name__ == "__main__":
         for ele in eles:
             if ele.pt>25 and abs(ele.eta+ele.deltaEtaSC)<1.4442:
                 if ele.genPartIdx>=0:
-                    ROOT.sigmaIEtaIEtaSigist3.Fill(ele.sieie)
+                    ROOT.sigmaIEtaIEtaSigHist3.Fill(ele.sieie)
                 else:
                     ROOT.sigmaIEtaIEtaBkgHist3.Fill(ele.sieie)
     print("with helper class loop done",time.ctime())
