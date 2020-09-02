@@ -62,11 +62,11 @@ if __name__ == "__main__":
             print("processing event {} / {}".format(event_nr,nr_events))
         evtdata.get_handles(event)
         for ele in evtdata.get("eles"):
-            #we will plot this for 20 GeV barrel electrons in our example
+            #we will plot this for 25 GeV barrel electrons in our example
             #note we use supercluster eta to for geometric cuts as its from 0,0,0 and therefore represents the detector coordinates
             #electron eta is used for physics quantities as it is w.r.t to the vtx position of the electron and just represents its true eta
             #summary: SC eta = detector eta, electron eta = physics eta
-            if ele.et()>20 and abs(ele.superCluster().eta())<1.4442:
+            if ele.et()>25 and abs(ele.superCluster().eta())<1.4442:
                 ROOT.sigmaIEtaIEtaHist.Fill(ele.full5x5_sigmaIetaIeta())
                 
     out_file.Write()

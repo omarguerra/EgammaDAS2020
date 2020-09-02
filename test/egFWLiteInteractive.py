@@ -11,11 +11,10 @@ import re
 import os
 
 from DataFormats.FWLite import Events, Handle
-from Analysis.HLTAnalyserPy.EvtData import EvtData, EvtHandles, add_product
+from EgammaUser.EgammaDAS2020.EvtData import EvtData, EvtHandles, add_product
 
-import Analysis.HLTAnalyserPy.CoreTools as CoreTools
-import Analysis.HLTAnalyserPy.GenTools as GenTools
-import Analysis.HLTAnalyserPy.HistTools as HistTools
+import EgammaUser.EgammaDAS2020.CoreTools as CoreTools
+import EgammaUser.EgammaDAS2020.GenTools as GenTools
 
 """ 
 This is an example of how to access E/gamma objects in the MiniAOD in fwlite. 
@@ -56,12 +55,13 @@ if __name__ == "__main__":
     products = [] 
     add_product(products,"eles","std::vector<pat::Electron>","slimmedElectrons")
     add_product(products,"phos","std::vector<pat::Photon>","slimmedPhotons")
+    add_product(products,"trigRes","edm::TriggerResults","TriggerResults::HLT")
     evtdata = EvtData(products,verbose=True)
 
     events = Events(args.in_filenames)
     nr_events = events.size()
     
-    print("nrEvents: {}".format(events))
+    print("nrEvents: {}".format(nr_events))
 
     """
     now we can play around with the electrons interactively, 
