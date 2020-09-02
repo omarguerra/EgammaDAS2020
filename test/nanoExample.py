@@ -37,7 +37,7 @@ if __name__ == "__main__":
     parser.add_argument('in_filenames',nargs="+",help='input filenames')
     parser.add_argument('--prefix','-p',default='',help='file prefix')
     parser.add_argument('--out','-o',default='output.root',help='output filename')
-    parser.add_argument('--report','-r',default=50000,type=int,help='report every x events')
+    parser.add_argument('--report','-r',default=25000,type=int,help='report every x events')
     parser.add_argument('--max_events','-n',default=-1,type=int,help='max number of events to run over')
     args = parser.parse_args()
 
@@ -54,10 +54,13 @@ if __name__ == "__main__":
 
     #now open the output root file
     out_file = ROOT.TFile(args.out,"RECREATE")
-    #create a histogram
-    sigmaIEtaIEtaHist1 = ROOT.TH1D("sigmaIEtaIEtaHist1",";#sigma_{i#etai#eta};#entries;",100,0,0.03)
-    sigmaIEtaIEtaHist2 = ROOT.TH1D("sigmaIEtaIEtaHist2",";#sigma_{i#etai#eta};#entries;",100,0,0.03)
-    sigmaIEtaIEtaHist3 = ROOT.TH1D("sigmaIEtaIEtaHist3",";#sigma_{i#etai#eta};#entries;",100,0,0.03)
+    #create a histogram, we will make 3 just to demonstrate 3 ways you can do this, normally you would just do one. The best way is probably to follow the root exercise with RDataFrame
+    sigmaIEtaIEtaSigHist1 = ROOT.TH1D("sigmaIEtaIEtaSigHist1",";#sigma_{i#etai#eta};#entries;",90,0,0.03)
+    sigmaIEtaIEtaSigHist2 = ROOT.TH1D("sigmaIEtaIEtaSigHist2",";#sigma_{i#etai#eta};#entries;",90,0,0.03)
+    sigmaIEtaIEtaSigHist3 = ROOT.TH1D("sigmaIEtaIEtaSigHist3",";#sigma_{i#etai#eta};#entries;",90,0,0.03)
+    sigmaIEtaIEtaBkgHist1 = ROOT.TH1D("sigmaIEtaIEtaBkgHist1",";#sigma_{i#etai#eta};#entries;",90,0,0.03)
+    sigmaIEtaIEtaBkgHist2 = ROOT.TH1D("sigmaIEtaIEtaBkgHist2",";#sigma_{i#etai#eta};#entries;",90,0,0.03)
+    sigmaIEtaIEtaBkgHist3 = ROOT.TH1D("sigmaIEtaIEtaBkgHist3",";#sigma_{i#etai#eta};#entries;",90,0,0.03)
     
     #Nano is just a flat tree, therefore this ways work for any similar flat tree and 
     #are not specific to nano
@@ -67,7 +70,8 @@ if __name__ == "__main__":
     print("start time",time.ctime())
 
     #1st way, via TTree::Draw
-    Events.Draw("Electron_sieie>>sigmaIEtaIEtaHist1","Electron_pt>25 && abs(Electron_eta+Electron_deltaEtaSC)<1.4442","goff",max_events)
+    Events.Draw("Electron_sieie>>sigmaIEtaIEtaSigHist1","Electron_pt>25 && abs(Electron_eta+Electron_deltaEtaSC)<1.4442 && Electron_genPartIdx>=0","goff",max_events)
+    Events.Draw("Electron_sieie>>sigmaIEtaIEtaBkgHist1","Electron_pt>25 && abs(Electron_eta+Electron_deltaEtaSC)<1.4442 && Electron_genPartIdx<0","goff",max_events)
     print("TTree::Draw done",time.ctime())
 
 
@@ -94,7 +98,10 @@ if __name__ == "__main__":
             print("processing event {} / {} {}".format(event_nr,nr_events,time.ctime()))
         for ele_nr in range(0,event.nElectron): 
             if event.Electron_pt[ele_nr]>25 and abs(event.Electron_eta[ele_nr]+event.Electron_deltaEtaSC[ele_nr])<1.4442:
-                ROOT.sigmaIEtaIEtaHist2.Fill(event.Electron_sieie[ele_nr])
+                if event.Electron_genPartIdx[ele_nr]>=0:
+                    ROOT.sigmaIEtaIEtaSigHist2.Fill(event.Electron_sieie[ele_nr])
+                else:
+                    ROOT.sigmaIEtaIEtaBkgHist2.Fill(event.Electron_sieie[ele_nr])
 
     print("bare event loop done",time.ctime())
 
@@ -109,7 +116,10 @@ if __name__ == "__main__":
         eles = Collection(event,"Electron")
         for ele in eles:
             if ele.pt>25 and abs(ele.eta+ele.deltaEtaSC)<1.4442:
-                ROOT.sigmaIEtaIEtaHist3.Fill(ele.sieie)
+                if ele.genPartIdx>=0:
+                    ROOT.sigmaIEtaIEtaSigist3.Fill(ele.sieie)
+                else:
+                    ROOT.sigmaIEtaIEtaBkgHist3.Fill(ele.sieie)
     print("with helper class loop done",time.ctime())
     
     
