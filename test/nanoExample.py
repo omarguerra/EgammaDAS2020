@@ -99,9 +99,9 @@ if __name__ == "__main__":
         for ele_nr in range(0,event.nElectron): 
             if event.Electron_pt[ele_nr]>25 and abs(event.Electron_eta[ele_nr]+event.Electron_deltaEtaSC[ele_nr])<1.4442:
                 if event.Electron_genPartIdx[ele_nr]>=0:
-                    ROOT.sigmaIEtaIEtaSigHist2.Fill(event.Electron_sieie[ele_nr])
+                    sigmaIEtaIEtaSigHist2.Fill(event.Electron_sieie[ele_nr])
                 else:
-                    ROOT.sigmaIEtaIEtaBkgHist2.Fill(event.Electron_sieie[ele_nr])
+                    sigmaIEtaIEtaBkgHist2.Fill(event.Electron_sieie[ele_nr])
 
     print("bare event loop done",time.ctime())
 
@@ -117,9 +117,9 @@ if __name__ == "__main__":
         for ele in eles:
             if ele.pt>25 and abs(ele.eta+ele.deltaEtaSC)<1.4442:
                 if ele.genPartIdx>=0:
-                    ROOT.sigmaIEtaIEtaSigHist3.Fill(ele.sieie)
+                    sigmaIEtaIEtaSigHist3.Fill(ele.sieie)
                 else:
-                    ROOT.sigmaIEtaIEtaBkgHist3.Fill(ele.sieie)
+                    sigmaIEtaIEtaBkgHist3.Fill(ele.sieie)
     print("with helper class loop done",time.ctime())
     
     
